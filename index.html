@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE Mock Test Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #1a1a1a;
+        }
+        .nav-section {
+            margin-bottom: 40px;
+        }
+        .nav-section h2 {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nav-links a {
+            display: block;
+            padding: 15px 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            color: #333;
+            font-size: 16px;
+        }
+        .nav-links a:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+        .setup-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 30px;
+            margin-top: 40px;
+        }
+        .setup-section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .setup-section pre {
+            background: #1a1a1a;
+            color: #f0f0f0;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .setup-section p {
+            margin: 15px 0;
+        }
+        code {
+            background: #e8e8e8;
+            padding: 2px 6px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JEE Mock Test Platform</h1>
+        
+        <div class="nav-section">
+            <h2>Creator Portal</h2>
+            <div class="nav-links">
+                <a href="upload-pdf.html">Upload PDF</a>
+                <a href="pdf-cropper.html">PDF Cropper</a>
+                <a href="question-editor.html">Question Editor</a>
+                <a href="test-settings.html">Test Settings</a>
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <h2>Student Portal</h2>
+            <div class="nav-links">
+                <a href="test-list.html">Available Tests</a>
+                <a href="attempt-test.html">Attempt Test</a>
+                <a href="result.html">Results</a>
+                <a href="analysis.html">Analysis Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="setup-section">
+            <h2>Backend Setup Instructions</h2>
+            <p>This platform requires a Node.js + Express backend with PostgreSQL database.</p>
+            
+            <p><strong>1. Install Dependencies:</strong></p>
+            <pre>npm install express pg multer cors pdf-lib sharp uuid</pre>
+            
+            <p><strong>2. Start the Server:</strong></p>
+            <pre>node server.js</pre>
+            
+            <p><strong>3. Database Setup:</strong></p>
+            <pre>psql -U postgres -f schema.sql</pre>
+            
+            <p>The server runs on <code>http://localhost:3000</code></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Settings - JEE Mock Test Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 18px; font-weight: 500; }
+        .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        h2 { font-size: 24px; margin-bottom: 30px; }
+        .form-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .form-section h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #333;
+        }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .percentile-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .percentile-table th, .percentile-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .percentile-table th { background: #f5f5f5; font-weight: 500; }
+        .percentile-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .add-row-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid #999;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .add-row-btn:hover { background: #f0f0f0; }
+        .remove-btn {
+            padding: 5px 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            color: #c00;
+        }
+        .remove-btn:hover { background: #fee; }
+        .btn {
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #333; }
+        .btn-secondary { background: #fff; color: #333; border: 1px solid #333; }
+        .btn-secondary:hover { background: #f0f0f0; }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .message { padding: 12px 15px; margin-bottom: 20px; font-size: 14px; }
+        .message.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .message.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .existing-tests { background: #fff; border: 1px solid #ddd; padding: 30px; }
+        .existing-tests h3 { font-size: 16px; margin-bottom: 20px; }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .test-item h4 { font-size: 15px; margin-bottom: 5px; }
+        .test-item-meta { font-size: 13px; color: #666; }
+        .test-item-actions { display: flex; gap: 10px; }
+        .test-item-actions button {
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        .test-item-actions button:hover { background: #f0f0f0; }
+        .empty-state { text-align: center; padding: 30px; color: #666; }
+        .status-badge { display: inline-block; padding: 3px 8px; font-size: 11px; text-transform: uppercase; }
+        .status-badge.published { background: #d4edda; color: #155724; }
+        .status-badge.draft { background: #f8f9fa; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back to Home</a>
+        <h1>Test Settings</h1>
+    </div>
+
+    <div class="container">
+        <h2>Create / Edit Test</h2>
+        <div id="message" class="message" style="display: none;"></div>
+
+        <div class="form-section">
+            <h3>Test Information</h3>
+            <input type="hidden" id="testId" value="">
+
+            <div class="form-group">
+                <label for="testName">Test Name</label>
+                <input type="text" id="testName" placeholder="e.g., JEE Main Mock Test 1">
+            </div>
+
+            <div class="form-group">
+                <label for="duration">Duration (minutes)</label>
+                <input type="number" id="duration" placeholder="180" value="180" min="1">
+            </div>
+
+            <div class="form-group">
+                <label for="instructions">Instructions</label>
+                <textarea id="instructions" placeholder="Enter test instructions...">1. This test contains 90 questions.
+2. Each correct MCQ answer carries +4 marks.
+3. Each wrong MCQ answer carries -1 mark.
+4. Numerical type questions have no negative marking.
+5. Use of calculators is NOT permitted.
+6. You can mark questions for review and revisit them later.</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Percentile Mapping</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                Define marks thresholds and corresponding percentiles for ranking.
+            </p>
+
+            <table class="percentile-table">
+                <thead>
+                    <tr>
+                        <th>Marks Threshold (≥)</th>
+                        <th>Percentile</th>
+                        <th style="width: 80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="percentileBody">
+                    <tr>
+                        <td><input type="number" class="marks-threshold" value="280" step="0.5"></td>
+                        <td><input type="number" class="percentile-value" value="99.9" step="0.1" max="100"></td>
+                        <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" class="marks-threshold" value="200" step="0.5"></td>
+                        <td><input type="number" class="percentile-value" value="95" step="0.1" max="100"></td>
+                        <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" class="marks-threshold" value="100" step="0.5"></td>
+                        <td><input type="number" class="percentile-value" value="80" step="0.1" max="100"></td>
+                        <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="add-row-btn" onclick="addPercentileRow()">+ Add Row</button>
+        </div>
+
+        <div class="form-actions">
+            <button id="saveTestBtn" class="btn">Save Test</button>
+            <button id="publishBtn" class="btn btn-secondary">Save & Publish</button>
+            <button id="clearFormBtn" class="btn btn-secondary">Clear Form</button>
+        </div>
+
+        <div class="existing-tests" style="margin-top: 30px;">
+            <h3>Existing Tests</h3>
+            <div id="testList"><div class="empty-state">Loading...</div></div>
+        </div>
+    </div>
+
+    <script>
+        let editingTestId = null;
+
+        async function loadTests() {
+            try {
+                const response = await fetch('/api/tests');
+                const tests = await response.json();
+                
+                const testList = document.getElementById('testList');
+                
+                if (!Array.isArray(tests) || tests.length === 0) {
+                    testList.innerHTML = '<div class="empty-state">No tests created yet</div>';
+                    return;
+                }
+
+                testList.innerHTML = tests.map(test => `
+                    <div class="test-item">
+                        <div>
+                            <h4>
+                                ${test.name}
+                                <span class="status-badge ${test.is_published ? 'published' : 'draft'}">
+                                    ${test.is_published ? 'Published' : 'Draft'}
+                                </span>
+                            </h4>
+                            <div class="test-item-meta">
+                                ${test.duration} minutes • ${test.question_count || 0} questions • ${test.total_marks || 0} marks
+                            </div>
+                        </div>
+                        <div class="test-item-actions">
+                            <button onclick="editTest(${test.id})">Edit</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('testList').innerHTML = 
+                    '<div class="empty-state">Failed to load tests</div>';
+            }
+        }
+
+        function addPercentileRow() {
+            const tbody = document.getElementById('percentileBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="number" class="marks-threshold" value="0" step="0.5"></td>
+                <td><input type="number" class="percentile-value" value="0" step="0.1" max="100"></td>
+                <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function removePercentileRow(btn) {
+            btn.closest('tr').remove();
+        }
+
+        function getPercentileMappings() {
+            const rows = document.querySelectorAll('#percentileBody tr');
+            const mappings = [];
+            
+            rows.forEach(row => {
+                const threshold = parseFloat(row.querySelector('.marks-threshold').value);
+                const percentile = parseFloat(row.querySelector('.percentile-value').value);
+                
+                if (!isNaN(threshold) && !isNaN(percentile)) {
+                    mappings.push({ marksThreshold: threshold, percentile: percentile });
+                }
+            });
+
+            return mappings.sort((a, b) => b.marksThreshold - a.marksThreshold);
+        }
+
+        async function saveTest(publish = false) {
+            const name = document.getElementById('testName').value.trim();
+            const duration = parseInt(document.getElementById('duration').value);
+            const instructions = document.getElementById('instructions').value;
+
+            if (!name) { showMessage('Please enter a test name', 'error'); return; }
+            if (!duration || duration < 1) { showMessage('Please enter a valid duration', 'error'); return; }
+
+            const testData = { name, duration, instructions, isPublished: publish };
+
+            try {
+                let testId = editingTestId;
+                let response;
+
+                if (testId) {
+                    response = await fetch(`/api/tests/${testId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testData)
+                    });
+                } else {
+                    response = await fetch('/api/tests', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testData)
+                    });
+                    const result = await response.json();
+                    testId = result.id;
+                }
+
+                const mappings = getPercentileMappings();
+                await fetch('/api/percentile-mappings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ testId, mappings })
+                });
+
+                showMessage(publish ? 'Test saved and published!' : 'Test saved successfully!', 'success');
+                clearForm();
+                loadTests();
+            } catch (error) {
+                showMessage('Failed to save test: ' + error.message, 'error');
+            }
+        }
+
+        async function editTest(testId) {
+            try {
+                const response = await fetch(`/api/tests/${testId}`);
+                const test = await response.json();
+
+                editingTestId = testId;
+                document.getElementById('testId').value = testId;
+                document.getElementById('testName').value = test.name;
+                document.getElementById('duration').value = test.duration;
+                document.getElementById('instructions').value = test.instructions || '';
+
+                const mappingsResponse = await fetch(`/api/percentile-mappings?testId=${testId}`);
+                const mappings = await mappingsResponse.json();
+
+                const tbody = document.getElementById('percentileBody');
+                tbody.innerHTML = '';
+
+                if (Array.isArray(mappings) && mappings.length > 0) {
+                    mappings.forEach(m => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><input type="number" class="marks-threshold" value="${m.marks_threshold}" step="0.5"></td>
+                            <td><input type="number" class="percentile-value" value="${m.percentile}" step="0.1" max="100"></td>
+                            <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    addPercentileRow();
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                showMessage('Failed to load test', 'error');
+            }
+        }
+
+        function clearForm() {
+            editingTestId = null;
+            document.getElementById('testId').value = '';
+            document.getElementById('testName').value = '';
+            document.getElementById('duration').value = '180';
+            document.getElementById('instructions').value = `1. This test contains 90 questions.
+2. Each correct MCQ answer carries +4 marks.
+3. Each wrong MCQ answer carries -1 mark.
+4. Numerical type questions have no negative marking.
+5. Use of calculators is NOT permitted.
+6. You can mark questions for review and revisit them later.`;
+
+            document.getElementById('percentileBody').innerHTML = `
+                <tr>
+                    <td><input type="number" class="marks-threshold" value="280" step="0.5"></td>
+                    <td><input type="number" class="percentile-value" value="99.9" step="0.1" max="100"></td>
+                    <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                </tr>
+                <tr>
+                    <td><input type="number" class="marks-threshold" value="200" step="0.5"></td>
+                    <td><input type="number" class="percentile-value" value="95" step="0.1" max="100"></td>
+                    <td><button class="remove-btn" onclick="removePercentileRow(this)">Remove</button></td>
+                </tr>
+            `;
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            setTimeout(() => { messageDiv.style.display = 'none'; }, 4000);
+        }
+
+        document.getElementById('saveTestBtn').addEventListener('click', () => saveTest(false));
+        document.getElementById('publishBtn').addEventListener('click', () => saveTest(true));
+        document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+
+        loadTests();
+    </script>
+</body>
+</html>

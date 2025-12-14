@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analysis - JEE Mock Test Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 18px; font-weight: 500; }
+        .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .main-layout { display: flex; min-height: calc(100vh - 53px); }
+        .sidebar {
+            width: 220px;
+            background: #fff;
+            border-right: 1px solid #ddd;
+            padding: 20px 0;
+        }
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px;
+            margin-bottom: 15px;
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav a:hover { background: #f9f9f9; }
+        .sidebar-nav a.active { background: #f5f5f5; border-left-color: #1a1a1a; font-weight: 500; }
+        .content-area { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; max-width: 1000px; }
+        .section.active { display: block; }
+        .section-title { font-size: 22px; margin-bottom: 25px; }
+        .cards-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card { background: #fff; border: 1px solid #ddd; padding: 20px; }
+        .card-label { font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
+        .card-value { font-size: 24px; font-weight: 600; }
+        .card-sub { font-size: 13px; color: #666; margin-top: 5px; }
+        .card-value.positive { color: #27ae60; }
+        .card-value.negative { color: #e74c3c; }
+        .subject-block { background: #fff; border: 1px solid #ddd; padding: 25px; margin-bottom: 20px; }
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .subject-name { font-size: 18px; font-weight: 600; }
+        .subject-score { font-size: 20px; font-weight: 600; }
+        .subject-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .subject-stat { text-align: center; }
+        .subject-stat-value { font-size: 20px; font-weight: 600; }
+        .subject-stat-label { font-size: 12px; color: #666; }
+        .data-table { width: 100%; background: #fff; border: 1px solid #ddd; border-collapse: collapse; }
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .data-table th { background: #f5f5f5; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #666; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .status-correct { color: #27ae60; font-weight: 500; }
+        .status-incorrect { color: #e74c3c; font-weight: 500; }
+        .status-unattempted { color: #95a5a6; }
+        .difficulty-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .difficulty-card { background: #fff; border: 1px solid #ddd; padding: 25px; text-align: center; }
+        .difficulty-card h4 { font-size: 16px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .difficulty-card.easy h4 { color: #27ae60; }
+        .difficulty-card.medium h4 { color: #f39c12; }
+        .difficulty-card.hard h4 { color: #e74c3c; }
+        .difficulty-stats { display: flex; justify-content: space-around; }
+        .difficulty-stat { text-align: center; }
+        .difficulty-stat-value { font-size: 24px; font-weight: 600; }
+        .difficulty-stat-label { font-size: 12px; color: #666; }
+        .mistake-item { background: #fff; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px; }
+        .mistake-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .mistake-qnum { font-weight: 600; }
+        .mistake-type { font-size: 12px; padding: 3px 8px; background: #fee; color: #c00; }
+        .mistake-details { font-size: 14px; color: #666; }
+        .time-bar { height: 8px; background: #e0e0e0; margin-top: 5px; }
+        .time-bar-fill { height: 100%; background: #333; }
+        .time-bar-fill.slow { background: #e74c3c; }
+        .loading { text-align: center; padding: 100px; color: #666; }
+        .highlight-row { background: #fff8e1 !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="result.html" id="backLink">← Back to Result</a>
+        <h1>Detailed Analysis</h1>
+    </div>
+
+    <div class="main-layout">
+        <div class="sidebar">
+            <div class="sidebar-title">Analysis Sections</div>
+            <nav class="sidebar-nav">
+                <a href="#overview" class="active" data-section="overview">Overview</a>
+                <a href="#subject" data-section="subject">Subject Analysis</a>
+                <a href="#attempt" data-section="attempt">Attempt Analysis</a>
+                <a href="#time" data-section="time">Time Analysis</a>
+                <a href="#difficulty" data-section="difficulty">Difficulty Analysis</a>
+                <a href="#questions" data-section="questions">Question Analysis</a>
+                <a href="#mistakes" data-section="mistakes">Mistake Analysis</a>
+            </nav>
+        </div>
+
+        <div class="content-area">
+            <div id="loadingState" class="loading">Loading analysis...</div>
+
+            <div id="overview" class="section">
+                <h2 class="section-title">Overview</h2>
+                <div class="cards-row" id="overviewCards"></div>
+            </div>
+
+            <div id="subject" class="section">
+                <h2 class="section-title">Subject Analysis</h2>
+                <div id="subjectBlocks"></div>
+            </div>
+
+            <div id="attempt" class="section">
+                <h2 class="section-title">Attempt Analysis</h2>
+                <div class="cards-row" id="attemptCards"></div>
+            </div>
+
+            <div id="time" class="section">
+                <h2 class="section-title">Time Analysis</h2>
+                <div class="cards-row" id="timeCards"></div>
+                <table class="data-table" id="timeTable">
+                    <thead>
+                        <tr><th>Q.No</th><th>Time Spent</th><th>Status</th><th>Time Distribution</th></tr>
+                    </thead>
+                    <tbody id="timeTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="difficulty" class="section">
+                <h2 class="section-title">Difficulty Analysis</h2>
+                <div class="difficulty-grid" id="difficultyGrid"></div>
+            </div>
+
+            <div id="questions" class="section">
+                <h2 class="section-title">Question-wise Analysis</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Q.No</th><th>Subject</th><th>Status</th><th>Your Answer</th><th>Correct Answer</th><th>Time</th><th>Marks</th></tr>
+                    </thead>
+                    <tbody id="questionsTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="mistakes" class="section">
+                <h2 class="section-title">Mistake Analysis</h2>
+                <div id="mistakesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const submissionId = urlParams.get('submissionId');
+        let analysisData = null;
+
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.dataset.section;
+                document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(section).classList.add('active');
+            });
+        });
+
+        async function loadAnalysis() {
+            if (!submissionId) {
+                document.getElementById('loadingState').innerHTML = 'No submission ID provided';
+                return;
+            }
+
+            document.getElementById('backLink').href = `result.html?submissionId=${submissionId}`;
+
+            try {
+                const response = await fetch(`/api/analysis/${submissionId}`);
+                if (!response.ok) throw new Error('Analysis not found');
+                analysisData = await response.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('overview').classList.add('active');
+
+                renderOverview();
+                renderSubjectAnalysis();
+                renderAttemptAnalysis();
+                renderTimeAnalysis();
+                renderDifficultyAnalysis();
+                renderQuestionAnalysis();
+                renderMistakeAnalysis();
+            } catch (error) {
+                document.getElementById('loadingState').innerHTML = `Failed to load analysis: ${error.message}`;
+            }
+        }
+
+        function renderOverview() {
+            const s = analysisData.submission;
+            const totalQ = s.correct_count + s.incorrect_count + s.unattempted_count;
+            
+            let html = `
+                <div class="card">
+                    <div class="card-label">Total Score</div>
+                    <div class="card-value ${s.total_score >= 0 ? 'positive' : 'negative'}">${s.total_score.toFixed(2)}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Accuracy</div>
+                    <div class="card-value">${s.accuracy.toFixed(1)}%</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Rank</div>
+                    <div class="card-value">#${s.rank}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Percentile</div>
+                    <div class="card-value">${s.percentile.toFixed(1)}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Questions Attempted</div>
+                    <div class="card-value">${s.correct_count + s.incorrect_count}/${totalQ}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Time Taken</div>
+                    <div class="card-value">${formatTime(s.total_time)}</div>
+                </div>
+            `;
+
+            if (analysisData.subjectAnalysis && analysisData.subjectAnalysis.length > 0) {
+                html += analysisData.subjectAnalysis.map(sa => `
+                    <div class="card">
+                        <div class="card-label">${sa.subject}</div>
+                        <div class="card-value ${sa.score >= 0 ? 'positive' : 'negative'}">${sa.score.toFixed(2)}</div>
+                        <div class="card-sub">${sa.accuracy.toFixed(1)}% accuracy</div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('overviewCards').innerHTML = html;
+        }
+
+        function renderSubjectAnalysis() {
+            const container = document.getElementById('subjectBlocks');
+            
+            if (!analysisData.subjectAnalysis || analysisData.subjectAnalysis.length === 0) {
+                container.innerHTML = '<p>No subject data available</p>';
+                return;
+            }
+
+            container.innerHTML = analysisData.subjectAnalysis.map(sa => `
+                <div class="subject-block">
+                    <div class="subject-header">
+                        <div class="subject-name">${sa.subject}</div>
+                        <div class="subject-score ${sa.score >= 0 ? 'positive' : 'negative'}">${sa.score.toFixed(2)} marks</div>
+                    </div>
+                    <div class="subject-stats">
+                        <div class="subject-stat">
+                            <div class="subject-stat-value positive">${sa.correct_count}</div>
+                            <div class="subject-stat-label">Correct</div>
+                        </div>
+                        <div class="subject-stat">
+                            <div class="subject-stat-value negative">${sa.incorrect_count}</div>
+                            <div class="subject-stat-label">Incorrect</div>
+                        </div>
+                        <div class="subject-stat">
+                            <div class="subject-stat-value">${sa.accuracy.toFixed(1)}%</div>
+                            <div class="subject-stat-label">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAttemptAnalysis() {
+            const s = analysisData.submission;
+            const marksGained = s.correct_count * 4;
+            const marksLost = s.incorrect_count * 1;
+            
+            document.getElementById('attemptCards').innerHTML = `
+                <div class="card">
+                    <div class="card-label">Correct Answers</div>
+                    <div class="card-value positive">${s.correct_count}</div>
+                    <div class="card-sub">+${marksGained} marks gained</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Wrong Answers</div>
+                    <div class="card-value negative">${s.incorrect_count}</div>
+                    <div class="card-sub">-${marksLost} marks lost</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Unattempted</div>
+                    <div class="card-value">${s.unattempted_count}</div>
+                    <div class="card-sub">0 marks</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Net Score</div>
+                    <div class="card-value ${s.total_score >= 0 ? 'positive' : 'negative'}">${s.total_score.toFixed(2)}</div>
+                </div>
+            `;
+        }
+
+        function renderTimeAnalysis() {
+            const questions = analysisData.questions || [];
+            const totalTime = questions.reduce((sum, q) => sum + (q.time_spent || 0), 0);
+            const avgTime = questions.length > 0 ? totalTime / questions.length : 0;
+            const maxTime = Math.max(...questions.map(q => q.time_spent || 0), 1);
+
+            document.getElementById('timeCards').innerHTML = `
+                <div class="card">
+                    <div class="card-label">Total Time</div>
+                    <div class="card-value">${formatTime(totalTime)}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Average Time/Question</div>
+                    <div class="card-value">${formatTime(Math.round(avgTime))}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Slowest Question</div>
+                    <div class="card-value">${formatTime(maxTime)}</div>
+                </div>
+            `;
+
+            document.getElementById('timeTableBody').innerHTML = questions.map((q, i) => {
+                const isSlow = q.time_spent > avgTime * 2;
+                const status = getQuestionStatus(q);
+                const barWidth = maxTime > 0 ? (q.time_spent / maxTime) * 100 : 0;
+                
+                return `
+                    <tr class="${isSlow ? 'highlight-row' : ''}">
+                        <td>Q${i + 1}</td>
+                        <td>${formatTime(q.time_spent || 0)}</td>
+                        <td class="${status.class}">${status.text}</td>
+                        <td style="width: 200px;">
+                            <div class="time-bar">
+                                <div class="time-bar-fill ${isSlow ? 'slow' : ''}" style="width: ${barWidth}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderDifficultyAnalysis() {
+            const questions = analysisData.questions || [];
+            const difficulties = ['Easy', 'Medium', 'Hard'];
+            
+            const stats = difficulties.map(diff => {
+                const qs = questions.filter(q => q.difficulty === diff);
+                const correct = qs.filter(q => getQuestionStatus(q).text === 'Correct').length;
+                return {
+                    name: diff,
+                    total: qs.length,
+                    correct,
+                    accuracy: qs.length > 0 ? ((correct / qs.length) * 100).toFixed(1) : 0
+                };
+            });
+
+            document.getElementById('difficultyGrid').innerHTML = stats.map(s => `
+                <div class="difficulty-card ${s.name.toLowerCase()}">
+                    <h4>${s.name}</h4>
+                    <div class="difficulty-stats">
+                        <div class="difficulty-stat">
+                            <div class="difficulty-stat-value">${s.total}</div>
+                            <div class="difficulty-stat-label">Total</div>
+                        </div>
+                        <div class="difficulty-stat">
+                            <div class="difficulty-stat-value positive">${s.correct}</div>
+                            <div class="difficulty-stat-label">Correct</div>
+                        </div>
+                        <div class="difficulty-stat">
+                            <div class="difficulty-stat-value">${s.accuracy}%</div>
+                            <div class="difficulty-stat-label">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderQuestionAnalysis() {
+            const questions = analysisData.questions || [];
+            
+            document.getElementById('questionsTableBody').innerHTML = questions.map((q, i) => {
+                const status = getQuestionStatus(q);
+                const marks = calculateMarks(q);
+                
+                return `
+                    <tr>
+                        <td>Q${i + 1}</td>
+                        <td>${q.subject}</td>
+                        <td class="${status.class}">${status.text}</td>
+                        <td>${q.selected_answer || '-'}</td>
+                        <td>${q.correct_answer}</td>
+                        <td>${formatTime(q.time_spent || 0)}</td>
+                        <td class="${marks >= 0 ? 'positive' : 'negative'}">${marks > 0 ? '+' : ''}${marks}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderMistakeAnalysis() {
+            const questions = analysisData.questions || [];
+            const mistakes = [];
+
+            questions.forEach((q, i) => {
+                const status = getQuestionStatus(q);
+                
+                if (status.text === 'Incorrect') {
+                    mistakes.push({
+                        qnum: i + 1,
+                        type: 'Wrong Answer',
+                        subject: q.subject,
+                        difficulty: q.difficulty,
+                        yourAnswer: q.selected_answer,
+                        correctAnswer: q.correct_answer,
+                        marksPenalty: q.negative_marks
+                    });
+                } else if (status.text === 'Unattempted' && q.difficulty === 'Easy') {
+                    mistakes.push({
+                        qnum: i + 1,
+                        type: 'Missed Easy Question',
+                        subject: q.subject,
+                        difficulty: q.difficulty,
+                        yourAnswer: '-',
+                        correctAnswer: q.correct_answer,
+                        marksPenalty: 0
+                    });
+                }
+            });
+
+            if (mistakes.length === 0) {
+                document.getElementById('mistakesList').innerHTML = '<p>No mistakes to analyze. Great job!</p>';
+                return;
+            }
+
+            document.getElementById('mistakesList').innerHTML = mistakes.map(m => `
+                <div class="mistake-item">
+                    <div class="mistake-header">
+                        <span class="mistake-qnum">Question ${m.qnum}</span>
+                        <span class="mistake-type">${m.type}</span>
+                    </div>
+                    <div class="mistake-details">
+                        <strong>${m.subject}</strong> • ${m.difficulty}<br>
+                        Your Answer: ${m.yourAnswer} | Correct Answer: ${m.correctAnswer}
+                        ${m.marksPenalty > 0 ? `<br><span class="negative">-${m.marksPenalty} marks penalty</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getQuestionStatus(q) {
+            if (!q.selected_answer || q.response_status === 'not_answered' || q.response_status === 'not_visited') {
+                return { text: 'Unattempted', class: 'status-unattempted' };
+            }
+            if (q.selected_answer === q.correct_answer) {
+                return { text: 'Correct', class: 'status-correct' };
+            }
+            return { text: 'Incorrect', class: 'status-incorrect' };
+        }
+
+        function calculateMarks(q) {
+            const status = getQuestionStatus(q);
+            if (status.text === 'Correct') return parseFloat(q.marks);
+            if (status.text === 'Incorrect') return -parseFloat(q.negative_marks);
+            return 0;
+        }
+
+        function formatTime(seconds) {
+            if (!seconds) return '0s';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (mins > 0) return `${mins}m ${secs}s`;
+            return `${secs}s`;
+        }
+
+        loadAnalysis();
+    </script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF - JEE Mock Test Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 30px;
+        }
+        .header h1 { font-size: 18px; font-weight: 500; }
+        .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .header a:hover { color: #fff; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        h2 { font-size: 24px; margin-bottom: 30px; color: #1a1a1a; }
+        .upload-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .file-input-wrapper { margin-bottom: 20px; }
+        .file-input-wrapper label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .file-input-wrapper input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        .file-input-wrapper input[type="file"]:hover { border-color: #999; }
+        .progress-wrapper { margin-top: 20px; display: none; }
+        .progress-wrapper.active { display: block; }
+        .progress-label { font-size: 14px; margin-bottom: 8px; color: #666; }
+        .progress-bar { width: 100%; height: 8px; background: #e0e0e0; overflow: hidden; }
+        .progress-fill { height: 100%; background: #333; width: 0%; transition: width 0.3s ease; }
+        .progress-percent { font-size: 14px; margin-top: 8px; color: #666; }
+        .file-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+        .file-info.active { display: block; }
+        .file-info h3 { font-size: 16px; margin-bottom: 15px; }
+        .file-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .file-info-row:last-child { border-bottom: none; }
+        .file-info-row .label { color: #666; }
+        .file-info-row .value { font-weight: 500; }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #333; }
+        .btn:disabled { background: #999; cursor: not-allowed; }
+        .btn-secondary { background: #fff; color: #333; border: 1px solid #333; }
+        .btn-secondary:hover { background: #f0f0f0; }
+        .actions { margin-top: 20px; display: flex; gap: 10px; }
+        .uploaded-list { background: #fff; border: 1px solid #ddd; padding: 30px; }
+        .uploaded-list h3 { font-size: 18px; margin-bottom: 20px; }
+        .uploaded-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .uploaded-item:last-child { border-bottom: none; }
+        .uploaded-item-name { font-weight: 500; margin-bottom: 5px; }
+        .uploaded-item-meta { font-size: 13px; color: #666; }
+        .message { padding: 15px; margin-bottom: 20px; font-size: 14px; }
+        .message.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .message.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back to Home</a>
+        <h1>Upload PDF</h1>
+    </div>
+
+    <div class="container">
+        <h2>Upload Question Paper PDF</h2>
+        <div id="message" class="message" style="display: none;"></div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <label for="pdfFile">Select PDF File</label>
+                <input type="file" id="pdfFile" accept="application/pdf">
+            </div>
+
+            <div id="progressWrapper" class="progress-wrapper">
+                <div class="progress-label">Uploading...</div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressPercent" class="progress-percent">0%</div>
+            </div>
+
+            <div id="fileInfo" class="file-info">
+                <h3>File Information</h3>
+                <div class="file-info-row">
+                    <span class="label">File Name</span>
+                    <span id="fileName" class="value">-</span>
+                </div>
+                <div class="file-info-row">
+                    <span class="label">File Size</span>
+                    <span id="fileSize" class="value">-</span>
+                </div>
+                <div class="file-info-row">
+                    <span class="label">Pages</span>
+                    <span id="pageCount" class="value">-</span>
+                </div>
+                <div class="file-info-row">
+                    <span class="label">Status</span>
+                    <span id="uploadStatus" class="value">-</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="uploadBtn" class="btn" disabled>Upload PDF</button>
+                <button id="resetBtn" class="btn btn-secondary" style="display: none;">Upload Another</button>
+            </div>
+        </div>
+
+        <div class="uploaded-list">
+            <h3>Uploaded PDFs</h3>
+            <div id="pdfList"><div class="empty-state">Loading...</div></div>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let selectedFile = null;
+        let pageCount = 0;
+
+        const pdfFileInput = document.getElementById('pdfFile');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const fileInfo = document.getElementById('fileInfo');
+        const messageDiv = document.getElementById('message');
+        const pdfList = document.getElementById('pdfList');
+
+        async function loadPDFs() {
+            try {
+                const response = await fetch('/api/pdfs');
+                const pdfs = await response.json();
+                
+                if (!Array.isArray(pdfs) || pdfs.length === 0) {
+                    pdfList.innerHTML = '<div class="empty-state">No PDFs uploaded yet</div>';
+                    return;
+                }
+
+                pdfList.innerHTML = pdfs.map(pdf => `
+                    <div class="uploaded-item">
+                        <div class="uploaded-item-info">
+                            <div class="uploaded-item-name">${pdf.original_name}</div>
+                            <div class="uploaded-item-meta">
+                                ${formatFileSize(pdf.file_size)} • ${pdf.page_count} pages • 
+                                Uploaded ${new Date(pdf.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <a href="pdf-cropper.html?pdfId=${pdf.id}" class="btn">Crop Questions</a>
+                    </div>
+                `).join('');
+            } catch (error) {
+                pdfList.innerHTML = '<div class="empty-state">Failed to load PDFs. Check API connection.</div>';
+            }
+        }
+
+        pdfFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('uploadStatus').textContent = 'Ready to upload';
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                pageCount = pdf.numPages;
+                document.getElementById('pageCount').textContent = pageCount;
+            } catch (error) {
+                document.getElementById('pageCount').textContent = 'Unable to read';
+                pageCount = 0;
+            }
+
+            fileInfo.classList.add('active');
+            uploadBtn.disabled = false;
+        });
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            progressWrapper.classList.add('active');
+
+            const formData = new FormData();
+            formData.append('pdf', selectedFile);
+            formData.append('pageCount', pageCount);
+
+            try {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressFill.style.width = percent + '%';
+                        progressPercent.textContent = percent + '%';
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        showMessage('PDF uploaded successfully!', 'success');
+                        document.getElementById('uploadStatus').textContent = 'Uploaded';
+                        resetBtn.style.display = 'inline-block';
+                        loadPDFs();
+                    } else {
+                        showMessage('Upload failed. Please try again.', 'error');
+                        uploadBtn.disabled = false;
+                    }
+                    progressWrapper.classList.remove('active');
+                });
+
+                xhr.addEventListener('error', () => {
+                    showMessage('Upload failed. Check your connection.', 'error');
+                    progressWrapper.classList.remove('active');
+                    uploadBtn.disabled = false;
+                });
+
+                xhr.open('POST', '/api/pdfs/upload');
+                xhr.send(formData);
+            } catch (error) {
+                showMessage('Upload failed: ' + error.message, 'error');
+                progressWrapper.classList.remove('active');
+                uploadBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            selectedFile = null;
+            pageCount = 0;
+            pdfFileInput.value = '';
+            fileInfo.classList.remove('active');
+            progressFill.style.width = '0%';
+            progressPercent.textContent = '0%';
+            uploadBtn.disabled = true;
+            resetBtn.style.display = 'none';
+            messageDiv.style.display = 'none';
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+        }
+
+        loadPDFs();
+    </script>
+</body>
+</html>

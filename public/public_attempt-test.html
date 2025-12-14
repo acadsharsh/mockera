@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attempt Test - JEE Mock Test Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f0f0;
+            color: #333;
+            line-height: 1.5;
+        }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        .top-bar .test-name { font-size: 16px; font-weight: 500; }
+        .top-bar .timer {
+            font-size: 20px;
+            font-weight: 600;
+            font-family: monospace;
+            background: #333;
+            padding: 5px 15px;
+        }
+        .timer.warning { background: #c0392b; }
+        .main-container {
+            display: flex;
+            margin-top: 50px;
+            height: calc(100vh - 50px - 60px);
+        }
+        .question-area {
+            flex: 1;
+            padding: 25px 30px;
+            overflow-y: auto;
+            background: #fff;
+            border-right: 1px solid #ddd;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .question-number { font-size: 16px; font-weight: 600; }
+        .question-meta { font-size: 13px; color: #666; }
+        .question-meta span { margin-left: 15px; }
+        .question-image { margin-bottom: 25px; text-align: center; }
+        .question-image img { max-width: 100%; max-height: 350px; border: 1px solid #ddd; }
+        .question-image .no-image {
+            padding: 60px;
+            background: #f9f9f9;
+            color: #999;
+            border: 1px dashed #ddd;
+        }
+        .options-list { margin-top: 20px; }
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .option-item:hover { background: #f0f0f0; border-color: #bbb; }
+        .option-item.selected { background: #e8f4e8; border-color: #4a4; }
+        .option-item input[type="radio"], .option-item input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+        .option-label { font-weight: 500; margin-right: 10px; min-width: 25px; }
+        .option-text { flex: 1; font-size: 14px; }
+        .numerical-input { margin-top: 20px; }
+        .numerical-input label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+        .numerical-input input {
+            width: 200px;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+        }
+        .numerical-input input:focus { outline: none; border-color: #333; }
+        .palette-area {
+            width: 280px;
+            padding: 20px;
+            background: #fafafa;
+            overflow-y: auto;
+        }
+        .palette-title { font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+        .palette-legend {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .legend-color { width: 20px; height: 20px; margin-right: 10px; border: 1px solid #999; }
+        .legend-color.not-visited { background: #9e9e9e; }
+        .legend-color.not-answered { background: #e74c3c; }
+        .legend-color.answered { background: #27ae60; }
+        .legend-color.marked { background: #9b59b6; }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .palette-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #999;
+            background: #9e9e9e;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .palette-btn:hover { opacity: 0.9; }
+        .palette-btn.current { border: 3px solid #1a1a1a; }
+        .palette-btn.not-visited { background: #9e9e9e; }
+        .palette-btn.not-answered { background: #e74c3c; }
+        .palette-btn.answered { background: #27ae60; }
+        .palette-btn.marked { background: #9b59b6; }
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        .bottom-left, .bottom-right { display: flex; gap: 10px; }
+        .btn { padding: 10px 20px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
+        .btn-clear { background: #fff; color: #333; border: 1px solid #ccc; }
+        .btn-clear:hover { background: #f5f5f5; }
+        .btn-mark { background: #9b59b6; color: #fff; }
+        .btn-mark:hover { background: #8e44ad; }
+        .btn-save { background: #27ae60; color: #fff; }
+        .btn-save:hover { background: #219a52; }
+        .btn-submit { background: #1a1a1a; color: #fff; }
+        .btn-submit:hover { background: #333; }
+        .btn-nav { background: #fff; color: #333; border: 1px solid #333; }
+        .btn-nav:hover { background: #f0f0f0; }
+        .loading-screen, .error-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .loading-screen p, .error-screen p { margin-top: 20px; color: #666; }
+        .error-screen a { margin-top: 20px; color: #333; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; padding: 30px; max-width: 500px; width: 90%; }
+        .modal h3 { font-size: 18px; margin-bottom: 15px; }
+        .modal p { margin-bottom: 10px; font-size: 14px; color: #666; }
+        .modal-stats { background: #f5f5f5; padding: 15px; margin: 15px 0; }
+        .modal-stats div { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen" class="loading-screen"><p>Loading test...</p></div>
+    <div id="errorScreen" class="error-screen" style="display: none;">
+        <p id="errorMessage">Failed to load test</p>
+        <a href="test-list.html">← Back to Test List</a>
+    </div>
+
+    <div id="testInterface" style="display: none;">
+        <div class="top-bar">
+            <div class="test-name" id="testNameDisplay">JEE Mock Test</div>
+            <div class="timer" id="timerDisplay">03:00:00</div>
+        </div>
+
+        <div class="main-container">
+            <div class="question-area">
+                <div class="question-header">
+                    <div class="question-number" id="questionNumberDisplay">Question 1</div>
+                    <div class="question-meta">
+                        <span id="subjectDisplay">Physics</span>
+                        <span id="marksDisplay">+4 / -1</span>
+                        <span id="typeDisplay">MCQ</span>
+                    </div>
+                </div>
+
+                <div class="question-image">
+                    <img id="questionImage" src="" alt="Question">
+                    <div id="noImage" class="no-image" style="display: none;">No question image</div>
+                </div>
+
+                <div id="optionsContainer" class="options-list"></div>
+                <div id="numericalContainer" class="numerical-input" style="display: none;">
+                    <label for="numericalAnswer">Enter your answer:</label>
+                    <input type="number" id="numericalAnswer" step="any" placeholder="e.g., 3.14">
+                </div>
+            </div>
+
+            <div class="palette-area">
+                <div class="palette-title">Question Palette</div>
+                <div class="palette-legend">
+                    <div class="legend-item"><div class="legend-color not-visited"></div><span>Not Visited</span></div>
+                    <div class="legend-item"><div class="legend-color not-answered"></div><span>Visited, Not Answered</span></div>
+                    <div class="legend-item"><div class="legend-color answered"></div><span>Answered</span></div>
+                    <div class="legend-item"><div class="legend-color marked"></div><span>Marked for Review</span></div>
+                </div>
+                <div class="palette-grid" id="paletteGrid"></div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="bottom-left">
+                <button class="btn btn-nav" id="prevBtn">← Previous</button>
+                <button class="btn btn-clear" id="clearBtn">Clear Response</button>
+                <button class="btn btn-mark" id="markBtn">Mark for Review</button>
+            </div>
+            <div class="bottom-right">
+                <button class="btn btn-save" id="saveNextBtn">Save & Next</button>
+                <button class="btn btn-submit" id="submitBtn">Submit Test</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal">
+            <h3>Confirm Submission</h3>
+            <p>Are you sure you want to submit the test?</p>
+            <div class="modal-stats" id="modalStats">
+                <div><span>Answered:</span><span id="statAnswered">0</span></div>
+                <div><span>Not Answered:</span><span id="statNotAnswered">0</span></div>
+                <div><span>Marked for Review:</span><span id="statMarked">0</span></div>
+                <div><span>Not Visited:</span><span id="statNotVisited">0</span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-nav" id="cancelSubmit">Cancel</button>
+                <button class="btn btn-submit" id="confirmSubmit">Submit Test</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testId = null;
+        let submissionId = null;
+        let questions = [];
+        let responses = {};
+        let currentIndex = 0;
+        let timeRemaining = 0;
+        let timerInterval = null;
+        let questionStartTime = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        testId = urlParams.get('testId');
+
+        async function init() {
+            if (!testId) { showError('No test ID provided'); return; }
+
+            try {
+                const testResponse = await fetch(`/api/tests/${testId}`);
+                if (!testResponse.ok) throw new Error('Test not found');
+                const test = await testResponse.json();
+
+                document.getElementById('testNameDisplay').textContent = test.name;
+                timeRemaining = test.duration * 60;
+
+                const questionsResponse = await fetch(`/api/questions?testId=${testId}`);
+                questions = await questionsResponse.json();
+
+                if (!Array.isArray(questions) || questions.length === 0) {
+                    showError('This test has no questions');
+                    return;
+                }
+
+                questions.forEach(q => {
+                    responses[q.id] = { questionId: q.id, selectedAnswer: null, timeSpent: 0, status: 'not_visited' };
+                });
+
+                const submissionResponse = await fetch('/api/submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ testId: parseInt(testId), userId: 1 })
+                });
+                const submission = await submissionResponse.json();
+                submissionId = submission.id;
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('testInterface').style.display = 'block';
+
+                renderPalette();
+                loadQuestion(0);
+                startTimer();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'flex';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) { clearInterval(timerInterval); submitTest(); }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(timeRemaining / 3600);
+            const minutes = Math.floor((timeRemaining % 3600) / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.textContent = display;
+            if (timeRemaining <= 600) timerEl.classList.add('warning');
+        }
+
+        function renderPalette() {
+            document.getElementById('paletteGrid').innerHTML = questions.map((q, i) => `
+                <button class="palette-btn not-visited" data-index="${i}" onclick="goToQuestion(${i})">${i + 1}</button>
+            `).join('');
+        }
+
+        function updatePaletteButton(index) {
+            const btn = document.querySelector(`.palette-btn[data-index="${index}"]`);
+            const response = responses[questions[index].id];
+            btn.className = 'palette-btn ' + response.status;
+            if (index === currentIndex) btn.classList.add('current');
+        }
+
+        function loadQuestion(index) {
+            if (questionStartTime !== null) {
+                responses[questions[currentIndex].id].timeSpent += Math.floor((Date.now() - questionStartTime) / 1000);
+            }
+
+            currentIndex = index;
+            questionStartTime = Date.now();
+
+            const question = questions[index];
+            const response = responses[question.id];
+
+            if (response.status === 'not_visited') response.status = 'not_answered';
+
+            document.getElementById('questionNumberDisplay').textContent = `Question ${index + 1} of ${questions.length}`;
+            document.getElementById('subjectDisplay').textContent = question.subject;
+            document.getElementById('marksDisplay').textContent = `+${question.marks} / -${question.negative_marks}`;
+            document.getElementById('typeDisplay').textContent = question.question_type;
+
+            const imgEl = document.getElementById('questionImage');
+            const noImgEl = document.getElementById('noImage');
+            if (question.image_path) {
+                imgEl.src = question.image_path;
+                imgEl.style.display = 'block';
+                noImgEl.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                noImgEl.style.display = 'block';
+            }
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            const numericalContainer = document.getElementById('numericalContainer');
+
+            if (question.question_type === 'Numerical') {
+                optionsContainer.style.display = 'none';
+                numericalContainer.style.display = 'block';
+                document.getElementById('numericalAnswer').value = response.selectedAnswer || '';
+            } else {
+                optionsContainer.style.display = 'block';
+                numericalContainer.style.display = 'none';
+
+                const inputType = question.question_type === 'MSQ' ? 'checkbox' : 'radio';
+                const options = [
+                    { label: 'A', text: question.option_a },
+                    { label: 'B', text: question.option_b },
+                    { label: 'C', text: question.option_c },
+                    { label: 'D', text: question.option_d }
+                ];
+                const selectedAnswers = response.selectedAnswer ? response.selectedAnswer.split(',') : [];
+
+                optionsContainer.innerHTML = options.map(opt => `
+                    <div class="option-item ${selectedAnswers.includes(opt.label) ? 'selected' : ''}" onclick="selectOption('${opt.label}', '${inputType}')">
+                        <input type="${inputType}" name="answer" value="${opt.label}" ${selectedAnswers.includes(opt.label) ? 'checked' : ''}>
+                        <span class="option-label">${opt.label}.</span>
+                        <span class="option-text">${opt.text || 'Option ' + opt.label}</span>
+                    </div>
+                `).join('');
+            }
+
+            questions.forEach((q, i) => updatePaletteButton(i));
+            document.getElementById('prevBtn').disabled = index === 0;
+        }
+
+        function selectOption(label, type) {
+            const question = questions[currentIndex];
+            const response = responses[question.id];
+
+            if (type === 'checkbox') {
+                let selected = response.selectedAnswer ? response.selectedAnswer.split(',') : [];
+                if (selected.includes(label)) selected = selected.filter(s => s !== label);
+                else selected.push(label);
+                response.selectedAnswer = selected.sort().join(',');
+            } else {
+                response.selectedAnswer = label;
+            }
+
+            response.status = response.selectedAnswer ? 'answered' : 'not_answered';
+            loadQuestion(currentIndex);
+        }
+
+        function goToQuestion(index) {
+            saveCurrentResponse();
+            loadQuestion(index);
+        }
+
+        async function saveCurrentResponse() {
+            const question = questions[currentIndex];
+            const response = responses[question.id];
+
+            response.timeSpent += Math.floor((Date.now() - questionStartTime) / 1000);
+            questionStartTime = Date.now();
+
+            if (question.question_type === 'Numerical') {
+                const numValue = document.getElementById('numericalAnswer').value;
+                response.selectedAnswer = numValue || null;
+                response.status = numValue ? 'answered' : 'not_answered';
+            }
+
+            try {
+                await fetch('/api/responses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        submissionId,
+                        questionId: question.id,
+                        selectedAnswer: response.selectedAnswer,
+                        timeSpent: response.timeSpent,
+                        status: response.status
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save response:', error);
+            }
+        }
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            const response = responses[questions[currentIndex].id];
+            response.selectedAnswer = null;
+            response.status = 'not_answered';
+            loadQuestion(currentIndex);
+        });
+
+        document.getElementById('markBtn').addEventListener('click', () => {
+            responses[questions[currentIndex].id].status = 'marked';
+            updatePaletteButton(currentIndex);
+            saveCurrentResponse();
+            if (currentIndex < questions.length - 1) loadQuestion(currentIndex + 1);
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentIndex > 0) { saveCurrentResponse(); loadQuestion(currentIndex - 1); }
+        });
+
+        document.getElementById('saveNextBtn').addEventListener('click', () => {
+            saveCurrentResponse();
+            if (currentIndex < questions.length - 1) loadQuestion(currentIndex + 1);
+        });
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            saveCurrentResponse();
+            showSubmitModal();
+        });
+
+        function showSubmitModal() {
+            let answered = 0, notAnswered = 0, marked = 0, notVisited = 0;
+            Object.values(responses).forEach(r => {
+                if (r.status === 'answered') answered++;
+                else if (r.status === 'not_answered') notAnswered++;
+                else if (r.status === 'marked') marked++;
+                else notVisited++;
+            });
+
+            document.getElementById('statAnswered').textContent = answered;
+            document.getElementById('statNotAnswered').textContent = notAnswered;
+            document.getElementById('statMarked').textContent = marked;
+            document.getElementById('statNotVisited').textContent = notVisited;
+            document.getElementById('submitModal').classList.add('active');
+        }
+
+        document.getElementById('cancelSubmit').addEventListener('click', () => {
+            document.getElementById('submitModal').classList.remove('active');
+        });
+
+        document.getElementById('confirmSubmit').addEventListener('click', submitTest);
+
+        async function submitTest() {
+            clearInterval(timerInterval);
+            
+            try {
+                for (const question of questions) {
+                    const response = responses[question.id];
+                    await fetch('/api/responses', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            submissionId,
+                            questionId: question.id,
+                            selectedAnswer: response.selectedAnswer,
+                            timeSpent: response.timeSpent,
+                            status: response.status
+                        })
+                    });
+                }
+
+                await fetch('/api/submissions/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ submissionId })
+                });
+
+                window.location.href = `result.html?submissionId=${submissionId}`;
+            } catch (error) {
+                alert('Failed to submit test. Please try again.');
+            }
+        }
+
+        document.getElementById('numericalAnswer').addEventListener('input', (e) => {
+            const response = responses[questions[currentIndex].id];
+            response.selectedAnswer = e.target.value || null;
+            response.status = e.target.value ? 'answered' : 'not_answered';
+            updatePaletteButton(currentIndex);
+        });
+
+        window.addEventListener('beforeunload', (e) => { e.preventDefault(); e.returnValue = ''; });
+
+        init();
+    </script>
+</body>
+</html>

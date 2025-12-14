@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Editor - JEE Mock Test Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 18px; font-weight: 500; }
+        .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        .editor-layout { display: flex; gap: 30px; }
+        .preview-column { width: 50%; }
+        .form-column { width: 50%; }
+        .section-title { font-size: 18px; margin-bottom: 20px; }
+        .image-preview {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-preview img { max-width: 100%; max-height: 500px; object-fit: contain; }
+        .image-preview .placeholder { color: #999; font-size: 14px; }
+        .form-section { background: #fff; border: 1px solid #ddd; padding: 25px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #333;
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .options-section {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+        .options-section h4 { font-size: 14px; margin-bottom: 15px; color: #666; }
+        .option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .option-label { width: 30px; font-weight: 500; }
+        .option-row input { flex: 1; padding: 8px 12px; border: 1px solid #ccc; font-size: 14px; }
+        .btn {
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #333; }
+        .btn:disabled { background: #999; cursor: not-allowed; }
+        .btn-secondary { background: #fff; color: #333; border: 1px solid #333; }
+        .btn-secondary:hover { background: #f0f0f0; }
+        .form-actions { display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; }
+        .message { padding: 12px 15px; margin-bottom: 20px; font-size: 14px; }
+        .message.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .message.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .crop-nav { display: flex; gap: 10px; margin-bottom: 20px; }
+        .crop-nav select { flex: 1; padding: 10px; border: 1px solid #ccc; font-size: 14px; }
+        .test-selector { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #eee; }
+        .test-selector label { font-size: 14px; font-weight: 500; margin-bottom: 8px; display: block; }
+        .test-selector select { width: 100%; padding: 10px; border: 1px solid #ccc; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="pdf-cropper.html">← Back to Cropper</a>
+        <h1>Question Editor</h1>
+    </div>
+
+    <div class="container">
+        <div id="message" class="message" style="display: none;"></div>
+
+        <div class="crop-nav">
+            <select id="cropSelector"><option value="">Select a cropped question...</option></select>
+            <button id="loadCropBtn" class="btn">Load</button>
+        </div>
+
+        <div class="editor-layout">
+            <div class="preview-column">
+                <h3 class="section-title">Question Image Preview</h3>
+                <div class="image-preview">
+                    <img id="cropImage" src="" alt="Cropped question" style="display: none;">
+                    <div id="placeholder" class="placeholder">Select a cropped question to preview</div>
+                </div>
+            </div>
+
+            <div class="form-column">
+                <h3 class="section-title">Question Details</h3>
+                <div class="form-section">
+                    <div class="test-selector">
+                        <label for="testId">Assign to Test</label>
+                        <select id="testId"><option value="">Select a test...</option></select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <select id="subject">
+                                <option value="">Select subject...</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Mathematics">Mathematics</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="questionType">Question Type</label>
+                            <select id="questionType">
+                                <option value="MCQ">MCQ (Single Correct)</option>
+                                <option value="MSQ">MSQ (Multiple Correct)</option>
+                                <option value="Numerical">Numerical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="optionsSection" class="options-section">
+                        <h4>Answer Options</h4>
+                        <div class="option-row">
+                            <span class="option-label">A.</span>
+                            <input type="text" id="optionA" placeholder="Option A text">
+                        </div>
+                        <div class="option-row">
+                            <span class="option-label">B.</span>
+                            <input type="text" id="optionB" placeholder="Option B text">
+                        </div>
+                        <div class="option-row">
+                            <span class="option-label">C.</span>
+                            <input type="text" id="optionC" placeholder="Option C text">
+                        </div>
+                        <div class="option-row">
+                            <span class="option-label">D.</span>
+                            <input type="text" id="optionD" placeholder="Option D text">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="correctAnswer">Correct Answer</label>
+                        <input type="text" id="correctAnswer" placeholder="e.g., A or A,B,C for MSQ or 3.14 for Numerical">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="marks">Marks</label>
+                            <input type="number" id="marks" value="4" step="0.5" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="negativeMarks">Negative Marks</label>
+                            <input type="number" id="negativeMarks" value="1" step="0.5" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="difficulty">Difficulty</label>
+                            <select id="difficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="solution">Solution / Explanation</label>
+                        <textarea id="solution" placeholder="Enter detailed solution or explanation..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="saveBtn" class="btn" disabled>Save Question</button>
+                        <button id="saveNextBtn" class="btn btn-secondary" disabled>Save & Next</button>
+                        <button id="clearBtn" class="btn btn-secondary">Clear Form</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCropId = null;
+        let crops = [];
+        let tests = [];
+        let currentCropIndex = 0;
+
+        const cropSelector = document.getElementById('cropSelector');
+        const cropImage = document.getElementById('cropImage');
+        const placeholder = document.getElementById('placeholder');
+        const questionTypeSelect = document.getElementById('questionType');
+        const optionsSection = document.getElementById('optionsSection');
+        const messageDiv = document.getElementById('message');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCropId = urlParams.get('cropId');
+
+        async function init() {
+            await loadTests();
+            await loadCrops();
+            if (urlCropId) {
+                cropSelector.value = urlCropId;
+                loadCrop(urlCropId);
+            }
+        }
+
+        async function loadTests() {
+            try {
+                const response = await fetch('/api/tests');
+                tests = await response.json();
+                if (!Array.isArray(tests)) tests = [];
+                
+                const testSelect = document.getElementById('testId');
+                testSelect.innerHTML = '<option value="">Select a test...</option>' +
+                    tests.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            } catch (error) {
+                console.error('Failed to load tests:', error);
+            }
+        }
+
+        async function loadCrops() {
+            try {
+                const response = await fetch('/api/crops');
+                crops = await response.json();
+                if (!Array.isArray(crops)) crops = [];
+
+                cropSelector.innerHTML = '<option value="">Select a cropped question...</option>' +
+                    crops.map((c, i) => `<option value="${c.id}">Question ${i + 1} - Page ${c.page_number}</option>`).join('');
+            } catch (error) {
+                console.error('Failed to load crops:', error);
+            }
+        }
+
+        async function loadCrop(cropId) {
+            try {
+                const response = await fetch(`/api/crops/${cropId}`);
+                const crop = await response.json();
+
+                currentCropId = cropId;
+                currentCropIndex = crops.findIndex(c => c.id == cropId);
+
+                cropImage.src = crop.image_path;
+                cropImage.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('saveNextBtn').disabled = false;
+            } catch (error) {
+                showMessage('Failed to load crop', 'error');
+            }
+        }
+
+        document.getElementById('loadCropBtn').addEventListener('click', () => {
+            const cropId = cropSelector.value;
+            if (cropId) loadCrop(cropId);
+        });
+
+        questionTypeSelect.addEventListener('change', () => {
+            optionsSection.style.display = questionTypeSelect.value === 'Numerical' ? 'none' : 'block';
+        });
+
+        async function saveQuestion() {
+            if (!currentCropId) {
+                showMessage('Please select a cropped question first', 'error');
+                return false;
+            }
+
+            const testId = document.getElementById('testId').value;
+            if (!testId) {
+                showMessage('Please select a test to assign this question to', 'error');
+                return false;
+            }
+
+            const data = {
+                cropId: parseInt(currentCropId),
+                testId: parseInt(testId),
+                subject: document.getElementById('subject').value,
+                questionType: document.getElementById('questionType').value,
+                optionA: document.getElementById('optionA').value,
+                optionB: document.getElementById('optionB').value,
+                optionC: document.getElementById('optionC').value,
+                optionD: document.getElementById('optionD').value,
+                correctAnswer: document.getElementById('correctAnswer').value,
+                marks: parseFloat(document.getElementById('marks').value) || 4,
+                negativeMarks: parseFloat(document.getElementById('negativeMarks').value) || 1,
+                difficulty: document.getElementById('difficulty').value,
+                solution: document.getElementById('solution').value
+            };
+
+            if (!data.subject) { showMessage('Please select a subject', 'error'); return false; }
+            if (!data.correctAnswer) { showMessage('Please enter the correct answer', 'error'); return false; }
+
+            try {
+                const response = await fetch('/api/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showMessage('Question saved successfully!', 'success');
+                    return true;
+                } else {
+                    showMessage('Failed to save question', 'error');
+                    return false;
+                }
+            } catch (error) {
+                showMessage('Error saving question: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', saveQuestion);
+
+        document.getElementById('saveNextBtn').addEventListener('click', async () => {
+            const saved = await saveQuestion();
+            if (saved) {
+                clearForm();
+                if (currentCropIndex < crops.length - 1) {
+                    const nextCrop = crops[currentCropIndex + 1];
+                    cropSelector.value = nextCrop.id;
+                    loadCrop(nextCrop.id);
+                } else {
+                    showMessage('All questions have been processed!', 'success');
+                }
+            }
+        });
+
+        function clearForm() {
+            document.getElementById('subject').value = '';
+            document.getElementById('questionType').value = 'MCQ';
+            document.getElementById('optionA').value = '';
+            document.getElementById('optionB').value = '';
+            document.getElementById('optionC').value = '';
+            document.getElementById('optionD').value = '';
+            document.getElementById('correctAnswer').value = '';
+            document.getElementById('marks').value = '4';
+            document.getElementById('negativeMarks').value = '1';
+            document.getElementById('difficulty').value = 'Medium';
+            document.getElementById('solution').value = '';
+            optionsSection.style.display = 'block';
+        }
+
+        document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            setTimeout(() => { messageDiv.style.display = 'none'; }, 4000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

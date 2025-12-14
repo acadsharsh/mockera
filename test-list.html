@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Tests - JEE Mock Test Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .header a {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #1a1a1a;
+        }
+        .test-table {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+        .test-table th,
+        .test-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .test-table th {
+            background: #f5f5f5;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+        .test-table td {
+            font-size: 14px;
+        }
+        .test-table tr:last-child td {
+            border-bottom: none;
+        }
+        .test-table tr:hover td {
+            background: #fafafa;
+        }
+        .test-name {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #333;
+        }
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #333;
+        }
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+        .info-text {
+            font-size: 13px;
+            color: #666;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #d4edda;
+            color: #155724;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back to Home</a>
+        <h1>Available Tests</h1>
+    </div>
+
+    <div class="container">
+        <h2>Select a Test</h2>
+
+        <div id="testTableContainer">
+            <div class="loading">Loading available tests...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        async function loadTests() {
+            try {
+                const response = await fetch(`${API_BASE}/tests`);
+                const tests = await response.json();
+
+                const container = document.getElementById('testTableContainer');
+
+                // Filter published tests
+                const publishedTests = tests.filter(t => t.is_published);
+
+                if (publishedTests.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>No tests are currently available.</p>
+                            <a href="test-settings.html" class="btn btn-secondary">Create a Test</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="test-table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Duration</th>
+                                <th>Questions</th>
+                                <th>Total Marks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${publishedTests.map(test => `
+                                <tr>
+                                    <td>
+                                        <div class="test-name">${test.name}</div>
+                                    </td>
+                                    <td>${test.duration} minutes</td>
+                                    <td>${test.question_count || 0}</td>
+                                    <td>${test.total_marks || 0}</td>
+                                    <td>
+                                        <a href="attempt-test.html?testId=${test.id}" class="btn">Start Test</a>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Also show all tests for demo purposes
+                if (tests.length > publishedTests.length) {
+                    container.innerHTML += `
+                        <div style="margin-top: 30px;">
+                            <h3 style="font-size: 16px; margin-bottom: 15px; color: #666;">All Tests (including drafts - for demo)</h3>
+                            <table class="test-table">
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Status</th>
+                                        <th>Duration</th>
+                                        <th>Questions</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tests.map(test => `
+                                        <tr>
+                                            <td>
+                                                <div class="test-name">${test.name}</div>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge" style="${!test.is_published ? 'background:#f8f9fa;color:#666;' : ''}">
+                                                    ${test.is_published ? 'Published' : 'Draft'}
+                                                </span>
+                                            </td>
+                                            <td>${test.duration} minutes</td>
+                                            <td>${test.question_count || 0}</td>
+                                            <td>
+                                                <a href="attempt-test.html?testId=${test.id}" class="btn">Start Test</a>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('testTableContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>Failed to load tests. Is the server running?</p>
+                        <p class="info-text">Make sure the backend server is running on http://localhost:3000</p>
+                    </div>
+                `;
+            }
+        }
+
+        loadTests();
+    </script>
+</body>
+</html>
